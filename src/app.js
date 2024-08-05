@@ -1,6 +1,13 @@
-const express = require('express');
+import {openDb} from './configDatabase.js';
+import express from 'express';
+
+
 const app = express();
 app.use(express.json());
+
+
+//abrir conexão com o banco de dados SQlite
+openDb();
 
 const port = 8090;
 
