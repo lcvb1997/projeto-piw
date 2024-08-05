@@ -1,5 +1,6 @@
 const express = require('express');
 const app = express();
+app.use(express.json());
 
 const port = 8090;
 
@@ -8,5 +9,12 @@ app.get('/', function (req, res){
 })
 
 
+
+app.post('/cliente', function(req, res){
+    console.log(req.body)
+    res.json({
+        "statuscCode": 200
+    })
+});
 app.listen(port, ()=> console.log("api rodando na porta",`${port}`))
 
