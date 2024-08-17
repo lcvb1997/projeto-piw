@@ -1,41 +1,61 @@
-🏁 NOME DO PROJETO
-O projeto é sobre o agendamento de mesas para um restaurante
+# :checkered_flag: NOME DO PROJETO
 
-🧑‍💻 Membros da equipe
-Felipe Daniel
-David Natanael - 397737
+O projeto é sobre agendamento de mesas para clientes de um restaurante
+
+## :technologist: Membros da equipe
+
 Lucas de Castro - 474080
+Felipe Daniel -
+David Natanael - 397737
 
-🧑‍🤝‍🧑 Papéis ou tipos de usuário da aplicação
-Administrador e usuário
+## :people_holding_hands: Papéis ou tipos de usuário da aplicação
 
-Tenha em mente que obrigatoriamente a aplicação deve possuir funcionalidades acessíveis a todos os tipos de usuário e outra funcionalidades restritas a certos tipos de usuários.
+Administrador, locador.
 
-🗓️ Entidades ou tabelas do sistema
-Liste as principais entidades do sistema.
+> Tenha em mente que obrigatoriamente a aplicação deve possuir funcionalidades acessíveis a todos os tipos de usuário e outra funcionalidades restritas a certos tipos de usuários.
 
-🚩 Principais funcionalidades da aplicação
-Agendar mesa do restaurante para o cliente, cadastrar e remover clientes
+## :spiral_calendar: Entidades ou tabelas do sistema
 
-⚠️⚠️⚠️ As informações a seguir devem ser enviadas juntamente com a versão final do projeto. ⚠️⚠️⚠️
+Entidade1 que é o admin
+Entidade2 que é o usuário
 
-🖥️ Tecnologias e frameworks utilizados
-Frontend: Vue.js e Pinya
+## :triangular_flag_on_post:	 Principais funcionalidades da aplicação
 
-Lista as tecnologias, frameworks e bibliotecas utilizados.
+Adicionar e remover clientes
+Adicionar e remover mesas locadas
 
-Backend: SQlite, Postman
+----
 
-Lista as tecnologias, frameworks e bibliotecas utilizados.
+:warning::warning::warning: As informações a seguir devem ser enviadas juntamente com a versão final do projeto. :warning::warning::warning:
 
-:shipit: Operações implementadas para cada entidade da aplicação
-Entidade	Criação	Leitura	Atualização	Remoção
-Entidade 1	X	X		X           X          X
-Entidade 2	X		X	X
-Entidade 3	X			
-Lembre-se que é necessário implementar o CRUD de pelo menos duas entidades.
 
-:neckbeard: Rotas da API REST utilizadas
-Método HTTP	URL
-GET	api/entidade1/
-POST	api/entidade2
+----
+
+## :desktop_computer: Tecnologias e frameworks utilizados
+
+**Frontend:**
+
+Vue.js e Pinya
+
+**Backend:**
+
+SQlite e Postman
+
+
+## :shipit: Operações implementadas para cada entidade da aplicação
+
+
+| Entidade| Criação | Leitura | Atualização | Remoção |
+| --- | --- | --- | --- | --- |
+| Entidade 1 | X |  X  |  | X |    | X |      | X |
+| Entidade 2 | X |    |  X | X |
+| Entidade 3 | X |    |  |  |
+
+> Lembre-se que é necessário implementar o CRUD de pelo menos duas entidades.
+
+## :neckbeard: Rotas da API REST utilizadas
+
+| Método HTTP | URL |
+| --- | --- |
+| GET | api/entidade1/|
+| POST | api/entidade2 |
