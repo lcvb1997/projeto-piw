@@ -1,12 +1,10 @@
 import {openDb} from './configDatabase.js';
-import { createTable, insertCliente, updateCliente, selectClientes, selectCliente, deleteCliente } from './Controller/cliente.js'
+//import { createTable, insertCliente, updateCliente, selectClientes, selectCliente, deleteCliente } from './Controller/cliente.js'
 import express from 'express';
 
 
 const app = express();
 app.use(express.json());
-
-createTable();
 
 //abrir conexão com o banco de dados SQlite
 
@@ -17,7 +15,7 @@ const port = 8090;
 //})
 
 //rota para mostrar todos os clientes
-app.get('/clientes', async function (req, res){
+/*app.get('/clientes', async function (req, res){
     let clientes = await selectClientes();
     res.json(clientes);
     
@@ -57,7 +55,7 @@ app.delete('/cliente', async function(req, res){
     
     let cliente = await deleteCliente(req.body.id)
     res.json(cliente);
-});
+});*/
 
 app.listen(port, ()=> console.log("api rodando na porta",`${port}`))
 
