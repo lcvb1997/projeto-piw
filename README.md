@@ -5,7 +5,7 @@ O projeto é sobre agendamento de mesas para clientes de um restaurante
 ## :technologist: Membros da equipe
 
 Lucas de Castro - 474080
-Felipe Daniel -
+Felipe Daniel - 493620 
 David Natanael - 397737
 
 ## :people_holding_hands: Papéis ou tipos de usuário da aplicação
