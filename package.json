@@ -137,7 +137,6 @@
     "node-abi": "^3.65.0",
     "node-addon-api": "^7.1.1",
     "node-gyp": "^8.4.1",
-    "nodemon": "^3.1.4",
     "nopt": "^5.0.0",
     "normalize-path": "^3.0.0",
     "npmlog": "^6.0.2",
@@ -220,9 +219,16 @@
     "yallist": "^4.0.0"
   },
   "scripts": {
-    "start": "nodemon src/app.js"
+    "start": "ts-node src/index.ts",
+    "dev": "nodemon --watch src -e ts --exec \"ts-node src/index.ts\""
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "nodemon": "^3.1.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
 }
