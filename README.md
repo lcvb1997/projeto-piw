@@ -39,8 +39,7 @@ Vue.js e Pinya
 
 **Backend:**
 
-SQlite e Postman
-
+SQlite e Thunderclient
 
 ## :shipit: Operações implementadas para cada entidade da aplicação
 
