@@ -2,24 +2,29 @@ import {Router} from 'express'
 import { AppDataSource } from '../DataSource'
 import { User } from "../entity/User"
 import { Role } from '../entity/Role'
-
+import bcrypt, { hash } from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { authenticateJWT } from '../middleware/authMiddleware';
+import { isAdmin } from '../middleware/adminMiddleware';
 
 
 //criar Router
 const router = Router()
 
+//iniciar o uso da autenticação jwt
+router.use(authenticateJWT);
+router.use(isAdmin)
 
-
-const users: User[] = []
 
 //Listar usuários do banco de dados
-router.get('/', async(req, res) =>{
-    const userRepository = AppDataSource.getRepository(User)
-    const users = await userRepository.find({ relations: ['role']})
+router.get('/', async (req, res) => {
+    console.log('Usuário autenticado:', req.user);
+    const userRepository = AppDataSource.getRepository(User);
+    const users = await userRepository.find({ relations: ['role'] });
     res.json({
-        data: users
-    })
-})
+        data: users,
+    });
+});
 
 //Listar somente um usuário do banco de dados, passando a variável :id direto na URL
 router.get('/:id', async (req, res)=>{
@@ -74,22 +79,31 @@ router.post('/', async(req, res) => {
         await roleRepository.save(roleInDB)
     }
 
-
+    const hashedPassword = bcrypt.hashSync(password, 10)
 
 //Usuário criado
     const newUser: User = userRepository.create({
         name,
         username,
         email,
-        password,
+        password: hashedPassword,
         role: roleInDB
     })
 
     await userRepository.save(newUser)
-    //users.push(newUser)
+
+    // Gerar o token
+    const token = jwt.sign({ id: newUser.id, username: newUser.username }, 'meu_web_token', { expiresIn: '1h' });
+
+    // Logs
+    console.log('Novo usuário criado:', newUser);
+    console.log('Token gerado:', token);
+
     res.status(200).json({
-        data: newUser
-    })
+        data: newUser,
+        token: token  // Inclua o token na resposta
+    });
+    
 })
 
 

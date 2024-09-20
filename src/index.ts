@@ -2,35 +2,43 @@ import express from 'express';
 import fs from 'fs';
 import https from 'https';
 import userRoutes from './routes/userRoutes';
+import authRoutes from './routes/authRoutes';
 import { AppDataSource } from './DataSource';
+import tableRoutes from './routes/tableRoutes';
 
 async function startServer() {
     try {
-        await AppDataSource.initialize() 
+        // Inicializa a conexão com o banco de dados
+        await AppDataSource.initialize()
+        // Cria uma instância do aplicativo Express
         const app = express();
 
-        app.use(express.json());
+        app.use(express.json()); 
+        app.use('/tables', tableRoutes);
 
-        //users adicionado aqui para melhor organização do código
-        //Router chamado para index.ts
-        app.use('/users', userRoutes)
+        // Adiciona as rotas de usuários para melhor organização do código
+        app.use('/users', userRoutes);
+        app.use('/', authRoutes);
 
-
-        //apenas caso necessite de um certificado
+        // Apenas se necessário um certificado para HTTPS
         https.createServer({
-        cert: fs.readFileSync('src/SSL/code.crt'),
-        key: fs.readFileSync('src/SSL/code.key')
-        }, app).listen(8091, ()=> console.log("Api rodando no https"));
+            // Lê o certificado e a chave do sistema de arquivos
+            cert: fs.readFileSync('src/SSL/code.crt'),
+            key: fs.readFileSync('src/SSL/code.key')
+        }, app).listen(8091, () => console.log("Api rodando no https"));
 
-
-        //Qual porta a api está rodando
+        // Define a porta para o servidor HTTP
         const port = 8090;
-        app.listen(port, ()=> console.log("Api rodando na porta",`${port}`));
+        app.listen(port, () => console.log("Api rodando na porta", `${port}`)); // Inicia o servidor na porta especificada
 
     } catch (e) {
+
         throw e        
     }  
 }
-startServer()
+
+// Chama a função para iniciar o servidor
+startServer();
+
 
 
