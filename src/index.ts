@@ -1,6 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import https from 'https';
+import cors from 'cors';
 import userRoutes from './routes/userRoutes';
 import authRoutes from './routes/authRoutes';
 import { AppDataSource } from './DataSource';
@@ -13,6 +14,7 @@ async function startServer() {
         // Cria uma instância do aplicativo Express
         const app = express();
 
+        app.use(cors());
         app.use(express.json()); 
         app.use('/tables', tableRoutes);
 

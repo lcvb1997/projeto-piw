@@ -1,26 +1,27 @@
-import { Entity, Column, ManyToOne, PrimaryGeneratedColumn }from "typeorm"
-import {Role} from "./Role"
-
+import { Entity, Column, ManyToOne, PrimaryGeneratedColumn, OneToMany } from "typeorm";
+import { Role } from "./Role";
+import { Table } from "./Table"; // Importando a entidade Table
 
 @Entity()
-//Informações necessárias na API para criar um usuário
 export class User {
-
     @PrimaryGeneratedColumn()
-    id!: number
-    
-    @Column()
-    name!: string
+    id!: number;
 
     @Column()
-    username!:string
+    name!: string;
 
     @Column()
-    email!: string
+    username!: string;
 
     @Column()
-    password!: string
+    email!: string;
 
-    @ManyToOne(()=> Role, role => role.users)
-    role!: Role
+    @Column()
+    password!: string;
+
+    @ManyToOne(() => Role, role => role.users)
+    role!: Role;
+
+    @OneToMany(() => Table, table => table.user) // Relacionamento com Table
+    tables?: Table[];
 }

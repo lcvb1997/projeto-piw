@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from "typeorm";
+import { User } from "./User";
 
 @Entity()
 export class Table {
@@ -13,4 +14,7 @@ export class Table {
 
     @Column({ default: false })
     isBooked!: boolean;
+
+    @ManyToOne(() => User, user => user.tables, { nullable: true }) // Estabelecendo o relacionamento
+    user?: User; // O usuário que reservou a mesa
 }
