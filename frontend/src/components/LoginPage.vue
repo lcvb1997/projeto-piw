@@ -1,26 +1,81 @@
 <template>
     <body>
         <div class="container">
-            <h1>Bem-vindo</h1>
-            <form id="login-form" @submit="login">
-                <div class="input-group">
-                    <label for="login-username">Nome de usuário:</label>
-                    <input type="text" id="login-username" v-model="username" required>
-                </div>
-                <div class="input-group">
-                    <label for="login-password">Senha:</label>
-                    <input type="password" id="login-password" v-model="password" required>
-                </div>
-                <button type="submit" class="button">Login</button>
-            </form>
-            <router-link to="/register" class="button">Registrar</router-link>
-        </div>
+        <h1>Bem-vindo</h1>
+        <form id="login-form" @submit="login">
+            <div class="input-group">
+                <label for="login-username">Nome de usuário:</label>
+                <input type="text" id="login-username" v-model="username" required>
+            </div>
+            <div class="input-group">
+                <label for="login-password">Senha:</label>
+                <input type="password" id="login-password" v-model="password" required>
+            </div>
+            <button type="submit" class="button">Login</button>
+        </form>
+        <router-link to="/register" class="button">Registrar</router-link>
+    </div>
     </body>
+    
 </template>
 
 <script>
+import axios from 'axios';
+import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
+export default {
+    setup() {
+        const username = ref('');
+        const password = ref('');
+        const router = useRouter();
+
+        const login = async (event) => {
+            event.preventDefault(); // Evita o envio padrão do formulário
+
+            console.log('Tentando fazer login com:', { username: username.value, password: password.value });
+
+            try {
+                const response = await axios.post('http://localhost:8090/login', {
+                    username: username.value,
+                    password: password.value,
+                });
+
+                console.log('Resposta do servidor:', response.data); // Log da resposta
+
+                // Altere aqui para corresponder à estrutura da resposta
+                const token = response.data.data ? response.data.data.jwt : response.data.jwt;
+
+                if (token) { // Verifica se o token JWT foi retornado
+                    alert('Login realizado com sucesso!'); // Mensagem de sucesso
+                    localStorage.setItem('token', token); // Salva o token JWT no localStorage
+                    localStorage.setItem('userId', response.data.data.user.id); // Ajuste se necessário
+                    localStorage.setItem('username', response.data.data.user.username);
+                    localStorage.setItem('email', response.data.data.user.email);
+                    localStorage.setItem('name', response.data.data.user.name);
+                    localStorage.setItem('role',JSON.stringify(response.data.data.user.role));
+
+                    username.value = ''; // Limpa o campo de nome de usuário
+                    password.value = ''; // Limpa o campo de senha
+                    router.push('/reserva'); // Redireciona para a página desejada após o login
+                } else {
+                    alert('Erro ao realizar o login. Verifique suas credenciais.');
+                }
+            } catch (error) {
+                console.error('Erro durante o login:', error);
+                alert('Erro ao tentar realizar o login. Tente novamente.');
+            }
+        };
+
+        return {
+            username,
+            password,
+            login,
+        };
+    },
+};
 </script>
+
 
 <style scoped>
 body,
