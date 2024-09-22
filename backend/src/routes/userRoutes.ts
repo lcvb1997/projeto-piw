@@ -4,10 +4,10 @@ import { User } from '../entity/User';
 import { Role } from '../entity/Role';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { authenticateJWT } from '../middleware/authMiddleware';
-import { isAdmin } from '../middleware/adminMiddleware';
+
 
 const router = Router();
+
 
 // Listar usuários do banco de dados
 router.get('/', async (req, res) => {
@@ -75,7 +75,10 @@ router.post('/', async (req, res) => {
     await userRepository.save(newUser);
 
     // Gerar token JWT
-    const token = jwt.sign({ id: newUser.id, username: newUser.username }, 'meu_web_token', { expiresIn: '1h' });
+    const token = jwt.sign(
+        { id: newUser.id, username: newUser.username, role: {id: newUser.role.id, name: newUser.role.name} },
+        'meu_web_token'
+    );
 
     res.status(200).json({ data: newUser, token });
 });
@@ -144,6 +147,12 @@ router.delete('/:id', async (req, res) => {
 
     await userRepository.remove(user);
 
+    // Resetar a sequência de IDs se não houver mais usuários
+    const userCount = await userRepository.count();
+    if (userCount === 0) {
+        await AppDataSource.query(`DELETE FROM sqlite_sequence WHERE name='user';`);
+    }
+
     res.status(200).json({ data: user });
 });
 
@@ -157,4 +166,5 @@ router.get('/reservations/:id', async (req, res) => {
     res.json({ message: `Reservas do usuário com ID: ${id}`, data: [] });
 });
 
+// Exportar router
 export default router;

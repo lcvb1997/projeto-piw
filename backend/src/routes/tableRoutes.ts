@@ -37,16 +37,39 @@ router.get('/:id', async (req, res) => {
     res.json({ data: table });
 });
 
-// Atualizar uma mesa no banco de dados e reservar
-router.put('/:id', async (req, res) => {
-    const { id } = req.params;
-    const { isBooked } = req.body;
-    const userId = req.user.id; // Pega o userId a partir do token JWT (usuário autenticado)
+// Rota para criar uma nova mesa no banco de dados
+router.post('/', isAdmin, async (req, res) => {
+    const { number, capacity } = req.body; // Supondo que você vai receber o número e a capacidade da mesa no corpo da requisição
     const tableRepository = AppDataSource.getRepository(Table);
-    const userRepository = AppDataSource.getRepository(User); // Repositório do User
+
+    const newTable = new Table();
+    newTable.number = number;
+    newTable.capacity = capacity;
+    newTable.isBooked = false; // Inicialmente, a mesa não está reservada
 
     try {
-        // Obtém o usuário correspondente ao userId
+        const savedTable = await tableRepository.save(newTable);
+        res.status(201).json({ data: savedTable }); // Retorna a mesa criada
+    } catch (error) {
+        console.error('Erro ao criar mesa:', error);
+        res.status(500).json({
+            error: {
+                status: 500,
+                message: 'Erro ao processar a criação da mesa.'
+            }
+        });
+    }
+});
+
+router.put('/:id', async (req, res) => {
+    console.log('PUT request received for id:', req.params.id);
+
+    const { isBooked } = req.body; // Pega apenas isBooked
+    const userId = req.user.id; // Pega o userId a partir do token JWT (usuário autenticado)
+    const tableRepository = AppDataSource.getRepository(Table);
+    const userRepository = AppDataSource.getRepository(User);
+
+    try {
         const user = await userRepository.findOneBy({ id: userId });
         if (!user) {
             return res.status(404).json({
@@ -57,22 +80,7 @@ router.put('/:id', async (req, res) => {
             });
         }
 
-        // Verifica se o usuário já reservou alguma mesa
-        const existingReservation = await tableRepository.findOne({
-            where: { user } // Verifica se há mesa reservada pelo usuário
-        });
-
-        if (existingReservation && isBooked) {
-            return res.status(400).json({
-                error: {
-                    status: 400,
-                    message: 'Você já reservou uma mesa.'
-                }
-            });
-        }
-
-        // Verifica se a mesa existe
-        const table = await tableRepository.findOneBy({ id: parseInt(id) });
+        const table = await tableRepository.findOneBy({ id: parseInt(req.params.id) });
         if (!table) {
             return res.status(404).json({
                 error: {
@@ -82,25 +90,22 @@ router.put('/:id', async (req, res) => {
             });
         }
 
-        // Verifica se a mesa já está reservada
-        if (table.isBooked && isBooked) {
-            return res.status(400).json({
-                error: {
-                    status: 400,
-                    message: 'Mesa já está reservada.'
-                }
-            });
+        // Atualiza o isBooked e vincula o usuário
+        table.isBooked = isBooked !== undefined ? isBooked : table.isBooked;
+
+        if (table.isBooked === true) {
+            table.user = user; // Vincula o usuário se a mesa for reservada
+        } else {
+            table.user = undefined; // Desvincula o usuário se a mesa não estiver mais reservada
         }
 
-        // Atualiza a mesa com o status de reserva e associa ao usuário
-        table.isBooked = isBooked !== undefined ? isBooked : table.isBooked;
-        table.user = isBooked ? user : undefined; // Associa o usuário completo
-
+        // Salva a mesa atualizada no banco de dados
         await tableRepository.save(table);
+        console.log('Mesa atualizada:', table);
 
         res.status(200).json({ data: table });
     } catch (error) {
-        console.error('Erro ao reservar a mesa:', error);
+        console.error('Erro ao processar a reserva:', error);
         res.status(500).json({
             error: {
                 status: 500,
@@ -110,58 +115,6 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Nova rota para listar as mesas reservadas pelo usuário autenticado
-router.get('/reservas/me', async (req, res) => {
-    const userId = req.user.id; // Pega o userId a partir do token JWT (usuário autenticado)
-    const tableRepository = AppDataSource.getRepository(Table);
-
-    try {
-        // Busca as mesas reservadas pelo usuário autenticado
-        const reservedTables = await tableRepository.find({
-            where: { user: { id: userId }, isBooked: true }
-        });
-
-        if (reservedTables.length === 0) {
-            return res.status(404).json({
-                error: {
-                    status: 404,
-                    message: 'Nenhuma reserva encontrada para este usuário.'
-                }
-            });
-        }
-
-        res.status(200).json({ data: reservedTables });
-    } catch (error) {
-        console.error('Erro ao buscar as reservas:', error);
-        res.status(500).json({
-            error: {
-                status: 500,
-                message: 'Erro ao processar a solicitação.'
-            }
-        });
-    }
-});
-
-// Deletar uma mesa do banco de dados
-router.delete('/:id', async (req, res) => {
-    const { id } = req.params;
-    const tableRepository = AppDataSource.getRepository(Table);
-    
-    const table = await tableRepository.findOneBy({ id: parseInt(id) });
-
-    if (!table) {
-        return res.status(404).json({
-            error: {
-                status: 404,
-                name: "NotFound",
-                message: "Mesa não encontrada"
-            }
-        });
-    }
-
-    await tableRepository.remove(table);
-    res.status(200).json({ data: table });
-});
 
 // Exportar router
 export default router;

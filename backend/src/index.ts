@@ -6,6 +6,8 @@ import userRoutes from './routes/userRoutes';
 import authRoutes from './routes/authRoutes';
 import { AppDataSource } from './DataSource';
 import tableRoutes from './routes/tableRoutes';
+import reservasRouter from './routes/reservaRoutes'
+
 
 async function startServer() {
     try {
@@ -21,6 +23,7 @@ async function startServer() {
         // Adiciona as rotas de usuários para melhor organização do código
         app.use('/users', userRoutes);
         app.use('/', authRoutes);
+        app.use('/reservas', reservasRouter)
 
         // Apenas se necessário um certificado para HTTPS
         https.createServer({
