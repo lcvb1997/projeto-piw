@@ -31,7 +31,80 @@
   </template>
   
   <script>
+  import axios from 'axios';
+  import { ref } from 'vue';
+  import { useRouter } from 'vue-router';
+  import { useAuthStore } from '@/stores/auth';
   
+  export default {
+    setup() { 
+      console.log('Componente RegisterPage montado');
+      const authStore = useAuthStore(); // Acessa o store
+      const router = useRouter();
+  
+      // Defina as variáveis como referências
+      const name = ref('');
+      const username = ref('');
+      const email = ref('');
+      const password = ref('');
+      const role = ref('');
+  
+      const register = async () => {
+        console.log('Função register chamada'); 
+        console.log('Dados atuais do formulário:', {
+          name: name.value,
+          username: username.value,
+          email: email.value,
+          password: password.value,
+          role: role.value
+        });
+  
+        try {
+          const response = await axios.post('http://localhost:8090/users', {
+            name: name.value,
+            username: username.value,
+            email: email.value,
+            password: password.value,
+            role: role.value
+          });
+  
+          // Verifica se os dados estão presentes na resposta
+          if (response && response.data) {
+            alert('Usuário cadastrado com sucesso!'); // Mensagem de sucesso
+            router.push('/login'); // Redireciona para a página de login
+          } else {
+            console.error('Resposta da API não contém dados válidos:', response);
+            alert('Erro inesperado ao cadastrar o usuário. Tente novamente.');
+          }
+        } catch (error) {
+          console.error('Erro durante o registro:', error);
+  
+          // Verifica se a resposta de erro possui um status
+          if (error.response) {
+            console.error('Resposta do servidor:', error.response.data);
+            alert(`Erro ao cadastrar usuário: ${error.response.data.message || 'Tente novamente.'}`);
+          } else {
+            alert('Erro ao tentar cadastrar o usuário. Tente novamente.');
+          }
+        }
+      };
+  
+      const goToLogin = () => {
+        router.push('/login');
+      };
+  
+      return {
+        register,
+        goToLogin,
+        authStore,
+        name,
+        username,
+        email,
+        password,
+        role
+      };
+    }
+  };
   </script>
   
   
