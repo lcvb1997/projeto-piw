@@ -44,6 +44,3 @@ async function startServer() {
 
 // Chama a função para iniciar o servidor
 startServer();
-
-
-
