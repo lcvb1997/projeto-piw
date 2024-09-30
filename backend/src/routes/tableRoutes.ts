@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { AppDataSource } from '../DataSource';
 import { Table } from '../entity/Table';
-import { User } from '../entity/User'; // Importando a entidade User
+import { User } from '../entity/User';
 import { authenticateJWT } from '../middleware/authMiddleware';
 import { isAdmin } from '../middleware/adminMiddleware';
 
@@ -14,58 +14,57 @@ router.use(authenticateJWT);
 // Listar mesas do banco de dados
 router.get('/', async (req, res) => {
     const tableRepository = AppDataSource.getRepository(Table);
-    const tables = await tableRepository.find();
-    res.json({ data: tables });
+
+    try {
+        const tables = await tableRepository.find({ relations: ["user"] });
+        res.json({ data: tables });
+    } catch (error) {
+        console.error('Erro ao buscar mesas:', error);
+        res.status(500).json({ error: { status: 500, message: 'Erro ao processar a solicitação.' } });
+    }
 });
 
-// Listar uma mesa do banco de dados, passando a variável :id na URL
+// Listar uma mesa específica do banco de dados
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
     const tableRepository = AppDataSource.getRepository(Table);
-    
-    const table = await tableRepository.findOneBy({ id: parseInt(id) });
 
-    if (!table) {
-        return res.status(404).json({
-            error: {
-                status: 404,
-                name: "NotFound",
-                message: "Mesa não encontrada"
-            }
-        });
+    try {
+        const table = await tableRepository.findOne({ where: { id: parseInt(id) }, relations: ["user"] });
+        if (!table) {
+            return res.status(404).json({ error: { status: 404, message: 'Mesa não encontrada' } });
+        }
+        res.json({ data: table });
+    } catch (error) {
+        console.error('Erro ao buscar mesa:', error);
+        res.status(500).json({ error: { status: 500, message: 'Erro ao processar a solicitação.' } });
     }
-    res.json({ data: table });
 });
+
 
 // Rota para criar uma nova mesa no banco de dados
 router.post('/', isAdmin, async (req, res) => {
-    const { number, capacity } = req.body; // Supondo que você vai receber o número e a capacidade da mesa no corpo da requisição
+    const { number, capacity } = req.body;
     const tableRepository = AppDataSource.getRepository(Table);
 
     const newTable = new Table();
     newTable.number = number;
     newTable.capacity = capacity;
-    newTable.isBooked = false; // Inicialmente, a mesa não está reservada
+    newTable.isBooked = false;
 
     try {
         const savedTable = await tableRepository.save(newTable);
-        res.status(201).json({ data: savedTable }); // Retorna a mesa criada
+        res.status(201).json({ data: savedTable });
     } catch (error) {
         console.error('Erro ao criar mesa:', error);
-        res.status(500).json({
-            error: {
-                status: 500,
-                message: 'Erro ao processar a criação da mesa.'
-            }
-        });
+        res.status(500).json({ error: { status: 500, message: 'Erro ao processar a criação da mesa.' } });
     }
 });
 
+// Rota para reservar uma mesa
 router.put('/:id', async (req, res) => {
-    console.log('PUT request received for id:', req.params.id);
-
-    const { isBooked } = req.body; // Pega apenas isBooked
-    const userId = req.user.id; // Pega o userId a partir do token JWT (usuário autenticado)
+    const { isBooked } = req.body;
+    const userId = req.user.id;
     const tableRepository = AppDataSource.getRepository(Table);
     const userRepository = AppDataSource.getRepository(User);
 
@@ -73,48 +72,60 @@ router.put('/:id', async (req, res) => {
         const user = await userRepository.findOneBy({ id: userId });
         if (!user) {
             return res.status(404).json({
-                error: {
-                    status: 404,
-                    message: 'Usuário não encontrado.'
-                }
+                error: { status: 404, message: 'Usuário não encontrado.' }
             });
         }
 
-        const table = await tableRepository.findOneBy({ id: parseInt(req.params.id) });
+        const table = await tableRepository.findOne({
+            where: { id: parseInt(req.params.id) },
+            relations: ["user"],
+        });
+
         if (!table) {
             return res.status(404).json({
-                error: {
-                    status: 404,
-                    message: 'Mesa não encontrada.'
-                }
+                error: { status: 404, message: 'Mesa não encontrada.' }
             });
         }
 
-        // Atualiza o isBooked e vincula o usuário
-        table.isBooked = isBooked !== undefined ? isBooked : table.isBooked;
-
-        if (table.isBooked === true) {
-            table.user = user; // Vincula o usuário se a mesa for reservada
+        if (isBooked) {
+            if (table.isBooked) {
+                return res.status(400).json({ error: { status: 400, message: 'Mesa já reservada.' } });
+            }
+            table.isBooked = true;
+            table.user = user; // associar o usuário à mesa
         } else {
-            table.user = undefined; // Desvincula o usuário se a mesa não estiver mais reservada
+            table.isBooked = false;
+            table.user = null; // limpa a associação do usuário
         }
 
-        // Salva a mesa atualizada no banco de dados
         await tableRepository.save(table);
-        console.log('Mesa atualizada:', table);
-
+        console.log('Mesa após atualização:', table);
         res.status(200).json({ data: table });
     } catch (error) {
         console.error('Erro ao processar a reserva:', error);
         res.status(500).json({
-            error: {
-                status: 500,
-                message: 'Erro ao processar a reserva.'
-            }
+            error: { status: 500, message: 'Erro ao processar a reserva.' }
         });
     }
 });
+// Rota para excluir uma mesa, mesmo que esteja reservada
+router.delete('/:id', async (req, res) => {
+    const { id } = req.params;
+    const tableRepository = AppDataSource.getRepository(Table);
 
+    try {
+        const table = await tableRepository.findOneBy({ id: parseInt(id) });
+        if (!table) {
+            return res.status(404).json({ error: { status: 404, message: 'Mesa não encontrada' } });
+        }
+
+        await tableRepository.remove(table);
+        res.status(200).json({ message: 'Mesa excluída com sucesso.' });
+    } catch (error) {
+        console.error('Erro ao excluir mesa:', error);
+        res.status(500).json({ error: { status: 500, message: 'Erro ao processar a exclusão da mesa.' } });
+    }
+});
 
 // Exportar router
 export default router;

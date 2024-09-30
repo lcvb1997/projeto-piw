@@ -1,7 +1,7 @@
 <template>
   <div class="editar-reserva-container">
     <div class="header-buttons">
-      <router-link to="/perfil">
+      <router-link to="/usuarios">
         <button class="perfil-button">Voltar</button>
       </router-link>
       <button @click="logout" class="perfil-button">Logout</button>
@@ -12,6 +12,7 @@
       <p><strong>Usuário:</strong> {{ userData.username }} ({{ userData.name }})</p>
     </div>
 
+    <!-- modal de alerta -->
     <div v-if="isAlertVisible" class="modal">
       <div class="modal-content">
         <span class="close" @click="closeAlert">&times;</span>
@@ -32,6 +33,10 @@
         <label for="email">Email:</label>
         <input type="email" v-model="userData.email" />
       </div>
+      <div>
+        <label for="password">Senha:</label>
+        <input type="password" v-model="password" placeholder="Deixe em branco para manter a senha" />
+      </div>
       <button type="submit">Atualizar Perfil</button>
     </form>
   </div>
@@ -45,14 +50,17 @@ import { useAuthStore } from '@/stores/auth';
 
 export default {
   setup() {
-    const userData = ref({ name: '', username: '', email: '', role: '' });
+    const userData = ref({ name: '', username: '', email: '' });
+    const password = ref('');
     const router = useRouter();
     const authStore = useAuthStore();
     const alertMessage = ref('');
     const isAlertVisible = ref(false);
+
     const userId = router.currentRoute.value.params.id;
 
     const fetchUserData = async () => {
+      // Verifica se o ID não é válido
       if (!userId || isNaN(userId)) {
         router.push({ name: 'idNotfound' });
         return;
@@ -75,9 +83,10 @@ export default {
         userData.value = { ...response.data.data };
       } catch (error) {
         console.error('Erro ao buscar dados do usuário:', error);
-        router.push({ name: 'idNotfound' }); // redireciona em caso de erro
+        router.push({ name: 'idNotfound' });
       }
     };
+
 
     const updateProfile = async () => {
       alertMessage.value = '';
@@ -87,17 +96,16 @@ export default {
       if (!userData.value.name.trim() || !userData.value.username.trim()) {
         alertMessage.value = 'Nome e Usuário são obrigatórios.';
         isAlertVisible.value = true;
-        return; 
+        return;
       }
 
       try {
         const token = authStore.token;
-
         const dataToUpdate = {
           name: userData.value.name,
           username: userData.value.username,
           email: userData.value.email,
-          role: userData.value.role, // apenas para referência
+          ...(password.value ? { password: password.value } : {}),
         };
 
         const response = await axios.put(`http://localhost:8090/users/${userId}`, dataToUpdate, {
@@ -106,17 +114,13 @@ export default {
           },
         });
 
-        // Atualize a store com os dados do usuário atualizado
         authStore.setUser(response.data.data);
-
-        router.push('/perfil');
+        router.push('/usuarios');
       } catch (error) {
         alertMessage.value = error.response ? error.response.data.error.message : 'Erro ao atualizar perfil.';
         isAlertVisible.value = true;
-        console.error('Erro ao atualizar perfil:', error.response ? error.response.data : error.message);
       }
     };
-
 
     const closeAlert = () => {
       isAlertVisible.value = false;
@@ -134,6 +138,7 @@ export default {
 
     return {
       userData,
+      password,
       alertMessage,
       isAlertVisible,
       updateProfile,
@@ -143,6 +148,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 .editar-reserva-container {
@@ -186,7 +192,7 @@ button:hover {
   background-color: #ffba08;
 }
 
-/* Estilos do modal */
+/* modal pra msg de alerta */
 .modal {
   position: fixed;
   top: 0;

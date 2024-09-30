@@ -1,37 +1,48 @@
 <template>
     <body>
         <div class="container">
-        <h1>Bem-vindo</h1>
-        <form id="login-form" @submit="login">
-            <div class="input-group">
-                <label for="login-username">Nome de usuário:</label>
-                <input type="text" id="login-username" v-model="username" required>
-            </div>
-            <div class="input-group">
-                <label for="login-password">Senha:</label>
-                <input type="password" id="login-password" v-model="password" required>
-            </div>
-            <button type="submit" class="button">Login</button>
-        </form>
-        <router-link to="/register" class="button">Registrar</router-link>
-    </div>
+            <h1>Bem-vindo</h1>
+            <form id="login-form" @submit="login">
+                <div class="input-group">
+                    <label for="login-username">Nome de usuário:</label>
+                    <input type="text" id="login-username" v-model="username">
+                </div>
+                <div class="input-group">
+                    <label for="login-password">Senha:</label>
+                    <input type="password" id="login-password" v-model="password">
+                </div>
+                <button type="submit" class="button">Login</button>
+            </form>
+            <router-link to="/register" class="button">Registrar</router-link>
+        </div>
     </body>
-    
 </template>
 
 <script>
 import axios from 'axios';
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 
 export default {
     setup() {
         const username = ref('');
         const password = ref('');
         const router = useRouter();
+        const authStore = useAuthStore();
 
         const login = async (event) => {
-            event.preventDefault(); // Evita o envio padrão do formulário
+            event.preventDefault();
+
+            // Validação dos campos
+            if (!username.value) {
+                alert('Por favor, preencha o nome de usuário.');
+                return;
+            }
+            if (!password.value) {
+                alert('Por favor, preencha a senha.');
+                return;
+            }
 
             console.log('Tentando fazer login com:', { username: username.value, password: password.value });
 
@@ -41,23 +52,28 @@ export default {
                     password: password.value,
                 });
 
-                console.log('Resposta do servidor:', response.data); // Log da resposta
-
-                // Altere aqui para corresponder à estrutura da resposta
                 const token = response.data.data ? response.data.data.jwt : response.data.jwt;
 
-                if (token) { // Verifica se o token JWT foi retornado
-                    alert('Login realizado com sucesso!'); // Mensagem de sucesso
-                    localStorage.setItem('token', token); // Salva o token JWT no localStorage
-                    localStorage.setItem('userId', response.data.data.user.id); // Ajuste se necessário
-                    localStorage.setItem('username', response.data.data.user.username);
-                    localStorage.setItem('email', response.data.data.user.email);
-                    localStorage.setItem('name', response.data.data.user.name);
-                    localStorage.setItem('role',JSON.stringify(response.data.data.user.role));
+                if (token) {
+                    alert('Login realizado com sucesso!');
 
-                    username.value = ''; // Limpa o campo de nome de usuário
-                    password.value = ''; // Limpa o campo de senha
-                    router.push('/reserva'); // Redireciona para a página desejada após o login
+                    authStore.setToken(token);
+                    authStore.setUser({
+                        userId: response.data.data.user.id,
+                        username: response.data.data.user.username,
+                        email: response.data.data.user.email,
+                        name: response.data.data.user.name,
+                        role: response.data.data.user.role,
+                    });
+
+                    console.log('Dados do usuário na store após login:', authStore.userData);
+
+                    // Limpa os campos de nome de usuário e senha
+                    username.value = '';
+                    password.value = '';
+
+                    // redirecionar para a página desejada após o login
+                    router.push('/reserva');
                 } else {
                     alert('Erro ao realizar o login. Verifique suas credenciais.');
                 }
@@ -75,7 +91,6 @@ export default {
     },
 };
 </script>
-
 
 <style scoped>
 body,
@@ -125,8 +140,8 @@ h1 {
 
 .button {
     display: inline-block;
-    background-color: #ffcb69; /* Amarelo pastel */
-    color: #d00000; /* Vermelho pastel */
+    background-color: #ffcb69;
+    color: #d00000;
     border: none;
     border-radius: 5px;
     padding: 15px;
@@ -134,13 +149,13 @@ h1 {
     font-size: 16px;
     cursor: pointer;
     transition: background-color 0.3s;
-    text-align: center; /* Alinha o texto no centro */
-    box-sizing: border-box; /* Garante que o padding e a borda sejam incluídos na largura/altura */
-    height: 50px; /* Defina uma altura fixa se necessário */
+    text-align: center;
+    box-sizing: border-box;
+    height: 50px;
 }
 
 .button:hover {
-    background-color: #ffba08; /* Amarelo um pouco mais escuro */
+    background-color: #ffba08;
 }
 
 @media (max-width: 600px) {

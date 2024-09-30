@@ -1,19 +1,21 @@
 <template>
   <div>
-    <div class="reservas-header">
+    <header class="reservas-header">
       <h1>Perfil do Usuário</h1>
-      <router-link :to="{ name: 'EditarPerfil', params: { id: profile.userId } }">
-        <button class="perfil-button">Editar Perfil</button>
-      </router-link>
-    </div>
+      <div class="header-buttons">
+        <router-link to="/reserva">
+          <button class="reservas-button">Voltar</button>
+        </router-link>
+        <router-link v-if="profile.id" :to="{ name: 'EditarPerfil', params: { id: profile.id } }">
+          <button class="reservas-button">Editar Perfil</button>
+        </router-link>
+        <button @click="logout" class="reservas-button">Logout</button>
+      </div>
+    </header>
 
     <div class="perfil-container">
       <div class="perfil-header">
-        <img
-          class="profile-picture"
-          src="https://via.placeholder.com/150"
-          alt="Foto de Perfil"
-        />
+        <img class="profile-picture" src="@/assets/default.jpg" alt="Foto de Perfil" />
         <h2>{{ profile.name }}</h2>
         <p class="username">@{{ profile.username }}</p>
       </div>
@@ -25,7 +27,11 @@
         </div>
         <div class="info-item">
           <strong>User ID:</strong>
-          <p>{{ profile.userId }}</p>
+          <p>{{ profile.id }}</p>
+        </div>
+        <div class="info-item">
+          <strong>Role:</strong>
+          <p>{{ profile.role.name }}</p>
         </div>
       </div>
     </div>
@@ -33,41 +39,64 @@
 </template>
 
 <script>
-import { ref, onMounted } from "vue";
+import { onMounted, computed } from "vue";
+import { useAuthStore } from '@/stores/auth';
+import axios from 'axios';
+import { useRouter } from 'vue-router';
 
 export default {
   setup() {
-    const profile = ref({
-      name: "",
-      username: "",
-      email: "",
-      userId: "",
-    });
+    const authStore = useAuthStore();
+    const router = useRouter();
 
-    const fetchProfile = () => {
-      const storedName = localStorage.getItem("name");
-      const storedUsername = localStorage.getItem("username");
-      const storedEmail = localStorage.getItem("email");
-      const storedUserId = localStorage.getItem("userId");
+    const profile = computed(() => ({
+      name: authStore.userData.name || "Nome não encontrado",
+      username: authStore.userData.username || "Username não encontrado",
+      email: authStore.userData.email || "Email não encontrado",
+      id: authStore.userData.id || "ID não encontrado",
+      role: authStore.userData.role || { id: '', name: 'Role não encontrada' },
+    }));
 
-      profile.value.name = storedName || "Nome não encontrado";
-      profile.value.username = storedUsername || "Username não encontrado";
-      profile.value.email = storedEmail || "Email não encontrado";
-      profile.value.userId = storedUserId || "ID não encontrado";
+    const fetchUserData = async () => {
+      const token = authStore.token;
+      const userId = authStore.userData.id;
+
+      if (userId) {
+        try {
+          const response = await axios.get(`http://localhost:8090/users/${userId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          authStore.setUser(response.data.data);
+        } catch (error) {
+          console.error('Erro ao buscar dados do usuário:', error);
+          alert('Houve um problema ao carregar seus dados. Tente novamente mais tarde.');
+        }
+      }
     };
 
-    onMounted(fetchProfile);
+    const logout = () => {
+      if (confirm("Você tem certeza que deseja sair?")) {
+        authStore.clearAuth();
+        router.push('/login');
+        alert('Logout realizado com sucesso!');
+      }
+    };
+
+    onMounted(() => {
+      fetchUserData();
+    });
 
     return {
       profile,
+      logout,
     };
   },
 };
 </script>
 
-### Estilos atualizados
 <style scoped>
-/* Global */
 body,
 html {
   margin: 0;
@@ -80,25 +109,15 @@ html {
   min-height: 100vh;
 }
 
-
-/* Cabeçalho fixo e centralizado */
 .reservas-header {
   width: 100%;
-  max-width: 800px; /* Mesma largura máxima do container de perfil */
   background-color: #fff;
   box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  margin: 0 auto; /* Centraliza o cabeçalho */
-  z-index: 10; /* Mantém o cabeçalho acima dos outros elementos */
 }
-
 
 .reservas-header h1 {
   font-size: 24px;
@@ -106,7 +125,12 @@ html {
   margin: 0;
 }
 
-.perfil-button {
+.header-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.reservas-button {
   background-color: #ffcb69;
   color: #d00000;
   border: none;
@@ -117,11 +141,10 @@ html {
   transition: background-color 0.3s ease;
 }
 
-.perfil-button:hover {
+.reservas-button:hover {
   background-color: #ffba08;
 }
 
-/* Container de perfil centralizado */
 .perfil-container {
   background-color: #fff;
   border-radius: 10px;
@@ -130,13 +153,12 @@ html {
   max-width: 800px;
   padding: 20px;
   box-sizing: border-box;
-  margin: 120px auto 0; /* Centraliza o container com margem para o header */
+  margin: 80px auto 0;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* Cabeçalho de perfil */
 .perfil-header {
   display: flex;
   flex-direction: column;
@@ -166,7 +188,6 @@ h2 {
   font-style: italic;
 }
 
-/* Informações de perfil */
 .perfil-info {
   display: flex;
   flex-direction: column;
@@ -194,7 +215,6 @@ p {
   margin: 0;
 }
 
-/* Responsividade */
 @media (max-width: 600px) {
   .perfil-container {
     padding: 15px;

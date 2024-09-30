@@ -1,6 +1,6 @@
 import { Entity, Column, ManyToOne, PrimaryGeneratedColumn, OneToMany } from "typeorm";
 import { Role } from "./Role";
-import { Table } from "./Table"; // Importando a entidade Table
+import { Table } from "./Table";
 
 @Entity()
 export class User {
@@ -22,6 +22,6 @@ export class User {
     @ManyToOne(() => Role, role => role.users)
     role!: Role;
 
-    @OneToMany(() => Table, table => table.user) // Relacionamento com Table
+    @OneToMany(() => Table, table => table.user, { onDelete: 'CASCADE' }) // adicionado onDelete: 'CASCADE'
     tables?: Table[];
 }

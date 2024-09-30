@@ -15,6 +15,6 @@ export class Table {
     @Column({ default: false })
     isBooked!: boolean;
 
-    @ManyToOne(() => User, user => user.tables, { nullable: true }) // Estabelecendo o relacionamento
-    user?: User; // O usuário que reservou a mesa
+    @ManyToOne(() => User, user => user.tables, { nullable: true, onDelete: 'CASCADE' }) // Assegurar o delete
+    user?: User | null;
 }
