@@ -53,13 +53,21 @@ export default {
     const userId = router.currentRoute.value.params.id;
 
     const fetchUserData = async () => {
+      const token = authStore.token;
+      const currentUserId = authStore.userData.id; // ID do usuário logado
+
       if (!userId || isNaN(userId)) {
         router.push({ name: 'idNotfound' });
         return;
       }
 
+      // Verifica se o usuário está tentando editar seu próprio perfil
+      if (Number(userId) !== Number(currentUserId)) {
+        router.push({ name: 'idNotfound' });
+        return;
+      }
+
       try {
-        const token = authStore.token;
         const response = await axios.get(`http://localhost:8090/users/${userId}`, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -116,7 +124,6 @@ export default {
         console.error('Erro ao atualizar perfil:', error.response ? error.response.data : error.message);
       }
     };
-
 
     const closeAlert = () => {
       isAlertVisible.value = false;

@@ -40,13 +40,13 @@
 
 <script>
 import { onMounted, computed } from "vue";
-import { useAuthStore } from '@/stores/auth';
+import { useAuthStore } from '@/stores/auth'; // Importando a store corretamente
 import axios from 'axios';
 import { useRouter } from 'vue-router';
 
 export default {
   setup() {
-    const authStore = useAuthStore();
+    const authStore = useAuthStore(); // Instanciando a store
     const router = useRouter();
 
     const profile = computed(() => ({

@@ -52,7 +52,6 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('token');
     },
 
-    // Adicionei a função logout
     logout() {
       this.clearAuth(); // Limpa os dados de autenticação
     },
@@ -64,5 +63,8 @@ export const useAuthStore = defineStore('auth', {
 
   getters: {
     isAuthenticated: (state) => !!state.token,
+    canAccessProfile: (state) => (profileId) => {
+      return state.userData.id === profileId; // Verifica se o ID do usuário logado é o mesmo do perfil
+    },
   },
 });
